@@ -889,7 +889,6 @@
 						tableText += "<tr><td>Roadbed Type</td><td>${RDBD_TYPE}</td></tr>";
 						tableText += "<tr><td>Name/Number</td><td>${MAP_LBL}</td></tr>";
 						tableText += "<tr><td>Begin DFO</td><td>${BEGIN_DFO}</td></tr>";
-                        tableText += "<tr><td>Current DFO</td><td id='dfo'>          </td></tr>";
 						tableText += "<tr><td>End DFO</td><td>${END_DFO}</td></tr>";
 						tableText += "</table>";
 
@@ -3395,7 +3394,7 @@
             else {
                 btnBackground.style.borderColor = "#f00";
                 btnBackground.style.backgroundColor = "#ccc";
-                dom.byId("mapDiv_gc").style.cursor = "help";
+                dom.byId("mapDiv_gc").style.cursor = "crosshair";
                 measureClicked = true;
 
             }
@@ -3520,8 +3519,7 @@
               calculatedM = point2M - geoMileValue;
             }
           }
-          dom.byId("dfo").innerHTML = Math.round(calculatedM*1000)/1000;
-          console.log(calculatedM);
+
           drawPoint(firstIntersectingPoint,Math.round(calculatedM*1000)/1000,"#FF0000");
         }
 
