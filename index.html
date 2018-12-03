@@ -435,10 +435,10 @@
       position: absolute;
       left: 20px;
       top: 180px;
-      z-index: 100;
+      z-index: 30;
     }
     #btnMeasureReadout {
-        background-image: url("DFO_tool.png");
+        background-image: url("DFO.png");
         height: 32px;
         width: 34px;
         padding: 0px;
@@ -463,7 +463,7 @@
 	  ga('send', 'pageview');
 
   </script>
-  <script src="https://js.arcgis.com/3.24"></script>
+  <script src="https://js.arcgis.com/3.26"></script>
   <script>
     //Map and measure variables
 	var map;
@@ -493,7 +493,7 @@
 	var layer1;
 	var google;
 	var TxDOTVectorTileLayer;
-	var appVersion = "4.7.2 House of Pancakes";
+	var appVersion = "4.7.3 Grenada";
 
 	//Overlay variables
 	var aadtLyr;
@@ -578,7 +578,7 @@
 		"esri/toolbars/draw",
 
         "esri/geometry/geometryEngine",
-		"esri/geometry/geodesicUtils",
+        "esri/geometry/geodesicUtils",
 		"esri/units",
 		"esri/graphic",
 		"esri/graphicsUtils",
@@ -684,6 +684,7 @@
 		map.on("load", function (){
 			createToolbar();
 			getBasemapLayers();
+			loadRoadwaysLyr();
 		});
 		map.on("click", logCoords);
 		// Clear graphic line on Measure Tab if when a new line is started
@@ -754,10 +755,10 @@
 
          sources.push({
             featureLayer: new FeatureLayer("https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Control_Sections/FeatureServer/0"),
-            searchFields: ["CTRL_SECT_LN_NBR"],
-            displayField: "CTRL_SECT_LN_NBR",
+            searchFields: ["CTRL_SECT_NBR"],
+            displayField: "CTRL_SECT_NBR",
             exactMatch: false,
-            outFields: ["CTRL_SECT_LN_NBR","RTE_RB_NM","BEGIN_MPT","END_MPT"],
+            outFields: ["CTRL_SECT_NBR","RTE_NM","BEGIN_MPT","END_MPT"],
             name: "Control Section",
             placeholder: "001001",
             highlightSymbol: new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new esri.Color([255,255,0,0.5]), 7),
@@ -883,44 +884,56 @@
 
    	     search.startup();
 
-		tableText = "";
-						tableText += "<table border=1 cellspacing=0 cellpadding=3 style='font-size:small'>";
-						tableText += "<tr><td>Route ID</td><td>${RTE_NM}</td></tr>";
-						tableText += "<tr><td>Roadbed Type</td><td>${RDBD_TYPE}</td></tr>";
-						tableText += "<tr><td>Name/Number</td><td>${MAP_LBL}</td></tr>";
-						tableText += "<tr><td>Begin DFO</td><td>${BEGIN_DFO}</td></tr>";
-						tableText += "<tr><td>End DFO</td><td>${END_DFO}</td></tr>";
-						tableText += "</table>";
+		function loadRoadwaysLyr(){
+			tableText = "";
+							tableText += "<table border=1 cellspacing=0 cellpadding=3 style='font-size:small'>";
+							tableText += "<tr><td>Route ID</td><td>${RTE_NM}</td></tr>";
+							tableText += "<tr><td>Roadbed Type</td><td>${RDBD_TYPE}</td></tr>";
+							tableText += "<tr><td>Name/Number</td><td>${MAP_LBL}</td></tr>";
+							tableText += "<tr><td>Begin DFO</td><td>${BEGIN_DFO}</td></tr>";
+							tableText += "<tr><td>End DFO</td><td>${END_DFO}</td></tr>";
+							tableText += "</table>";
 
-		// TxDOT Roadways layer, used only for identifying roadways in the basemap
-		var roadsInfoTemplate = new InfoTemplate("Roadway:", tableText);
-		roadwaysLyr = new FeatureLayer("https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Roadways/FeatureServer/0",{opacity: 0.0, outFields: ["RTE_NM", "RDBD_TYPE", "MAP_LBL", "RTE_PRFX", "BEGIN_DFO", "END_DFO"]});
-		roadwaysLyr.setDefinitionExpression("RTE_PRFX = 'IH' AND RDBD_TYPE = 'Single Roadbed'");
-		map.addLayer(roadwaysLyr);
+			// TxDOT Roadways layer, used only for identifying roadways in the basemap
+			var roadsInfoTemplate = new InfoTemplate("Roadway:", tableText);
+			roadwaysLyr = new FeatureLayer("https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Roadways/FeatureServer/0",{opacity: 0.0, outFields: ["RTE_NM", "RDBD_TYPE", "MAP_LBL", "RTE_PRFX", "BEGIN_DFO", "END_DFO"]});
+			map.addLayer(roadwaysLyr);
+			roadwaysLyr.setDefinitionExpression("RTE_PRFX = 'IH' AND RDBD_TYPE = 'Single Roadbed'");
+			roadwaysLyr.setInfoTemplate(roadsInfoTemplate);
+			map.infoWindow.resize(310,300);
+			map.on("zoom-start", function(){
+				roadwaysLyr.setVisibility(false);
+			});
 
-		map.on("zoom-end", function(){
-			if (map.getZoom()<8) {
-		       roadwaysLyr.setDefinitionExpression("RTE_PRFX = 'IH' AND RDBD_TYPE = 'Single Roadbed'");
-		       map.addLayer(roadwaysLyr);
-			}
-			if (map.getZoom()>7&&map.getZoom()<9) {
-		       roadwaysLyr.setDefinitionExpression("RTE_PRFX IN ('IH', 'US') AND RDBD_TYPE = 'Single Roadbed'");
-		       map.addLayer(roadwaysLyr);
-			}
-			if (map.getZoom()>8&&map.getZoom()<10) {
-		       roadwaysLyr.setDefinitionExpression("RTE_PRFX IN ('IH', 'US', 'SH', 'SL', 'FM', 'RM') AND RDBD_TYPE = 'Single Roadbed'");
-		       map.addLayer(roadwaysLyr);
-			}
-			if (map.getZoom()>9&&map.getZoom()<13) {
-		       roadwaysLyr.setDefinitionExpression("RTE_PRFX NOT IN ('CS', 'PR') AND RDBD_TYPE = 'Single Roadbed'");
-		       map.addLayer(roadwaysLyr);
-			}
-			if (map.getZoom()>12) {
-		       roadwaysLyr.setDefinitionExpression("");
-		       map.addLayer(roadwaysLyr);
-			}
-		    roadwaysLyr.setInfoTemplate(roadsInfoTemplate);
-		});
+			map.on("zoom-end", function(){
+				if (map.getZoom()<8) {
+			       roadwaysLyr.setDefinitionExpression("RTE_PRFX = 'IH' AND RDBD_TYPE = 'Single Roadbed'");
+			       map.addLayer(roadwaysLyr);
+				   roadwaysLyr.setVisibility(true);
+				}
+				if (map.getZoom()>7&&map.getZoom()<9) {
+			       roadwaysLyr.setDefinitionExpression("RTE_PRFX IN ('IH', 'US') AND RDBD_TYPE = 'Single Roadbed'");
+			       map.addLayer(roadwaysLyr);
+			       roadwaysLyr.setVisibility(true);
+				}
+				if (map.getZoom()>8&&map.getZoom()<10) {
+			       roadwaysLyr.setDefinitionExpression("RTE_PRFX IN ('IH', 'US', 'SH', 'SL', 'FM', 'RM') AND RDBD_TYPE = 'Single Roadbed'");
+			       map.addLayer(roadwaysLyr);
+			       roadwaysLyr.setVisibility(true);
+				}
+				if (map.getZoom()>9&&map.getZoom()<13) {
+			       roadwaysLyr.setDefinitionExpression("RTE_PRFX NOT IN ('CS', 'PR') AND RDBD_TYPE = 'Single Roadbed'");
+			       map.addLayer(roadwaysLyr);
+				   roadwaysLyr.setVisibility(true);
+				}
+				if (map.getZoom()>12) {
+			       roadwaysLyr.setDefinitionExpression("");
+			       map.addLayer(roadwaysLyr);
+				   roadwaysLyr.setVisibility(true);
+				}
+			    roadwaysLyr.setInfoTemplate(roadsInfoTemplate);
+			});
+		}
 
 		function getBasemapLayers(){
 				layer0 = (map.getLayer(map.layerIds[0])); //This should be the SPM Basemap layer
@@ -1362,12 +1375,10 @@
 			  polyline = {};
 	          activateTool("POLYLINE");
   			  home.hide();
-              dom.byId("divReadout").style.display="none";
 			}
 			else {
 			  deActivateTool("POLYLINE");
 			  home.show();
-              dom.byId("divReadout").style.display="block";
 			}
 
 			if (activeTab=="legendTab") {
@@ -1895,7 +1906,7 @@
 						tableText += "<table border=1 cellspacing=0 cellpadding=3 style='font-size:small'>";
 						tableText += "<tr><td>Route ID</td><td>${RIA_RTE_ID}</td></tr>";
 						tableText += "<tr><td>${ADT_YEAR} AADT</td><td>${ADT_CUR:NumberFormat}</td></tr>";
-						tableText += "<tr><td>${DESGN_YR} Estimated AADT</td><td>${ADT_DESGN:NumberFormat}</td></tr>";
+						tableText += "<tr><td>${DESGN_YR} Estimated AADT</td><td>${AADT_DESGN:NumberFormat}</td></tr>";
 						tableText += "<tr><td>24 Hour Truck Percentage</td><td>${TRK_AADT_PCT}</td></tr>";
 						tableText += "</table><br>Future Traffic and Percent Truck data is for main lanes only.";
 
@@ -1916,7 +1927,7 @@
 
 
 
-						futureTrafficLyr = new FeatureLayer(projectsUrl, {id:"Future_Traffic",visible: true,outFields:["RIA_RTE_ID","ADT_CUR","ADT_DESGN","TRK_AADT_PCT","ADT_YEAR","DESGN_YR"], infoTemplate: infoTemplate});
+						futureTrafficLyr = new FeatureLayer(projectsUrl, {id:"Future_Traffic",visible: true,outFields:["RIA_RTE_ID","ADT_CUR","AADT_DESGN","TRK_AADT_PCT","ADT_YEAR","DESGN_YR"], infoTemplate: infoTemplate});
 						futureTrafficLyr.setRenderer(theRenderer);
 						map.addLayer(futureTrafficLyr);
 						// map.reorderLayer(futureTrafficLyr,1);
@@ -2768,20 +2779,23 @@
 
 						function getTextContent(graphic){
 							var ADT_CUR = addCommas(Math.round(parseFloat(graphic.attributes.ADT_CUR)));
-							var ADT_DESGN = addCommas(Math.round(parseFloat(graphic.attributes.ADT_DESGN)));
+							var AADT_DESGN = addCommas(Math.round(parseFloat(graphic.attributes.AADT_DESGN)));
 							var toDFO = graphic.attributes.TO_DFO;
 							var fromDFO = graphic.attributes.FRM_DFO;
 							var len = toDFO - fromDFO;
 							var rndLen = len.toFixed(3);
 							var VMT = len * graphic.attributes.ADT_CUR;
 							var rndVMT = addCommas(Math.round(parseFloat(VMT)));
+							var ADT_YEAR = graphic.attributes.ADT_YEAR;
+							var DESGN_YR = graphic.attributes.DESGN_YR;
+
 							tableText = "";
 							tableText += "<table border=1 cellspacing=0 cellpadding=3 style='font-size:small'>";
 							tableText += "<tr><td>Route</td><td>"+graphic.attributes.RIA_RTE_ID+"</td></tr>";
 							tableText += "<tr><td>From DFO</td><td>"+graphic.attributes.FRM_DFO+"</td></tr>";
 							tableText += "<tr><td>To DFO</td><td>"+graphic.attributes.TO_DFO+"</td></tr>";
-							tableText += "<tr><td>AADT (2016)</td><td>"+ADT_CUR+"</td></tr>";
-							tableText += "<tr><td>Future AADT (2036)</td><td>"+ADT_DESGN+"</td></tr>";
+							tableText += "<tr><td>"+ADT_YEAR+" AADT</td><td>"+ADT_CUR+"</td></tr>";
+							tableText += "<tr><td>"+DESGN_YR+" Estimated AADT</td><td>"+AADT_DESGN+"</td></tr>";
 							tableText += "<tr><td>Truck Percent</td><td>"+graphic.attributes.TRK_AADT_PCT+"</td></tr>";
 							tableText += "<tr><td>Speed Limit</td><td>"+graphic.attributes.SPD_MAX+"</td></tr>";
 							tableText += "<tr><td>Number of Lanes</td><td>"+graphic.attributes.NUM_LANES+"</td></tr>";
@@ -2811,12 +2825,12 @@
 							return tableText;
 						}
 
-						var infoTemplate = new InfoTemplate("Roadway Inventory ${DATA_DATE}:",getTextContent);
+						var infoTemplate = new InfoTemplate("${ADT_YEAR} Roadway Inventory",getTextContent);
 						var projectsUrl = "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Roadway_Inventory_RB_OnSystem/FeatureServer/0";
 
 						rdwyInvLyr = new FeatureLayer(projectsUrl, {id:"Roadway_Inventory",visible: true,outFields:["*"], infoTemplate: infoTemplate});
 						map.addLayer(rdwyInvLyr);
-						map.infoWindow.resize(310,420);
+						map.infoWindow.resize(310,430);
 					}
 					activeOverlay = rdwyInvLyr;
 					// theLegend.layerInfos=[{layer:rdwyInvLyr, title:"Roadway Inventory"}];
@@ -3120,8 +3134,8 @@
 			tableText = "";
 			tableText += "<table border=1 cellspacing=0 cellpadding=3 style='font-size:small'>";
 			tableText += "<tr><td>Highway</td><td>${HWY}</td></tr>";
-			tableText += "<tr><td>AADT</td><td>${ADT_CUR:NumberFormat}</td></tr>";
-			tableText += "<tr><td>AADT Future</td><td>${ADT_DESGN:NumberFormat}</td></tr>";
+			tableText += "<tr><td>${ADT_YEAR} AADT</td><td>${ADT_CUR:NumberFormat}</td></tr>";
+			tableText += "<tr><td>${DESGN_YR} Estimated AADT</td><td>${AADT_DESGN:NumberFormat}</td></tr>";
 			tableText += "<tr><td>Lanes</td><td>${NUM_LANES}</td></tr>";
 			tableText += "<tr><td>Speed</td><td>${SPD_MAX}</td></tr>";
 			tableText += "<tr><td>Truck PCT</td><td>${TRK_AADT_PCT}</td></tr>";
@@ -3131,7 +3145,7 @@
 			tableText += "<tr><td>Median Width</td><td>${MED_WID}</td></tr>";
 			tableText += "</table>";
 
-			var infoTemplate = new InfoTemplate("Roadway Inventory:",tableText);
+			var infoTemplate = new InfoTemplate("${ADT_YEAR} Roadway Inventory:",tableText);
 			var projectsUrl = "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Roadway_Inventory_OnSystem/FeatureServer/0";
 
 			//var theSymbol = new esri.symbol.SimpleLineSymbol("solid", new esri.Color("#FF0000"), 5);
@@ -3139,7 +3153,7 @@
 			var theRenderer = new SimpleRenderer(theSymbol);
 
 			//Add the layer - outFields: ["*"] if you want to use all fields
-			projectsRI = new FeatureLayer(projectsUrl, {id:"RoadwayInventory",visible: false,outFields:["HWY","ADT_CUR","ADT_DESGN","NUM_LANES","SPD_MAX","TRK_AADT_PCT","ROW_W_USL","SUR_W","RB_WID","MED_WID","HSYS","ADT_YEAR"], infoTemplate: infoTemplate});
+			projectsRI = new FeatureLayer(projectsUrl, {id:"RoadwayInventory",visible: false,outFields:["HWY","ADT_CUR","AADT_DESGN","NUM_LANES","SPD_MAX","TRK_AADT_PCT","ROW_W_USL","SUR_W","RB_WID","MED_WID","HSYS","ADT_YEAR", "DESGN_YR"], infoTemplate: infoTemplate});
 			projectsRI.setRenderer(theRenderer);
 			projectsRI.setAutoGeneralize(false);
 			map.addLayer(projectsRI);
@@ -3415,7 +3429,7 @@
             mapPoint = event.mapPoint;
             var point = event.mapPoint;
             var pxWidth = map.extent.getWidth() / map.width;
-            var padding = 20 * pxWidth;
+            var padding = 30 * pxWidth;
             var newGeom = new Extent({
               "xmin": point.x - padding,
               "ymin": point.y - padding,
@@ -3463,8 +3477,8 @@
 
         function splitRecordForPointM() {
           var firstIntersectingPoint = findNearestCoordinate(mapPoint); //get coords on line closest to click
-          console.log("Nearest Coordinate: ",firstIntersectingPoint);
           console.log("MapPoint: ",mapPoint);
+          console.log("Nearest Coordinate: ",firstIntersectingPoint);
           var firstIntersectingCoord = geometryEngine.nearestVertex(gidWithMeasuresGeom.features[0].geometry, firstIntersectingPoint); //get closest vertex to coords
           console.log("Nearest Vertex: ",firstIntersectingCoord);
           var vertexIndex = firstIntersectingCoord.vertexIndex; //get vertex index value
@@ -3573,7 +3587,6 @@
         }
 
         // END DFO Tool
-
 	});
 		// These functions are outside of the Require so that they will be recognized in the HTML below.
 		function closeReleaseNotes(){
@@ -3644,8 +3657,10 @@
 	<h1><strong>RELEASE NOTES</strong></h1>
 	<p3 id="version"></p3>
 	<ul>
-	  <li>v4.7.2 Small update to switch back to TxDOT_Projects service, following issues with the previous version</li>
-	  <li>Switch RTE_RB_NM field in TxDOT Roadways to RTE_NM to match standard</li>
+	  <li>v4.7.3 Small update to fix Control Section field names in search layer.  Permanently fixed date fields in Roadway Inventory and Future Traffic layers so that future updates will not be required.  Fixed console errors in roadway layer.</li>
+	  <li>Previous version (4.7.2)...</li>
+	  <li>Switch back to TxDOT_Projects service, following issues with the previous version.</li>
+	  <li>Switch RTE_RB_NM field in TxDOT Roadways to RTE_NM to match standard.</li>
 	  <li>Updated Toll overlay.  This layer is now an extract from the official system of record, the Geospatial Roadway Inventory Database (GRID).</li>
 	  <li>Added a new Toll (Future & Proposed) overlay, since Toll data from GRID does not include future or proposed tolls, as the previous version did.</li>
 	  <li>Updated NHS overlay.  This layer is now an extract from the official system of record, GRID.  Also added a separate overlay for MAP-21 Principal Arterials that turns on in coordination with the NHS layer.  This overlay was added as a courtesy to aid with the transition to the new format; however, it will ultimately be removed, as MAP-21 designation is not tracked in GRID.</li>
@@ -3851,7 +3866,7 @@
 	 <button id="btnClearHighlighter" title="Clear Highlight" style="display:none">
 	 	<span>x</span>
 	 </button>
-     <div id="divReadout"><button id="btnMeasureReadout" class="mapButtons" title="Click on a route to view DFO values"></button></div>
+      <div id="divReadout"><button id="btnMeasureReadout" class="mapButtons" title="Click on a route to view DFO values"></button></div>
  </div>
  <div id="credits"></div>
 <div class="divODP">
