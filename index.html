@@ -569,6 +569,7 @@
 		"esri/tasks/query",
 		"esri/tasks/QueryTask",
 		"esri/arcgis/utils",
+        "esri/domUtils",
 		"esri/dijit/Legend",
 		"esri/dijit/Search",
 		"esri/geometry/webMercatorUtils",
@@ -612,7 +613,7 @@
         "esri/layers/WMTSLayerInfo",
 
 		"dojo/domReady!"], function (Map, OpenStreetMapLayer, esriRequest, Renderer, domConstruct, LayerInfo, Scalebar, on, domClass, query, Moveable, HomeButton,
-			Query, QueryTask, arcgisUtils, Legend, Search, webMercatorUtils, dom, KMLLayer, parser, Draw, geometryEngine,
+			Query, QueryTask, arcgisUtils, domUtils, Legend, Search, webMercatorUtils, dom, KMLLayer, parser, Draw, geometryEngine,
 			geodesicUtils, Units, Graphic, graphicsUtils, SpatialReference, Extent, FeatureLayer,
 			SimpleLineSymbol, CartographicLineSymbol, UniqueValueRenderer, SimpleMarkerSymbol,
 			SimpleFillSymbol, TextSymbol, SimpleRenderer, ClassBreaksRenderer, LabelLayer, LabelClass, Color, InfoTemplate, Tiled,
@@ -1223,6 +1224,7 @@
 		 	toolbar.activate(tool);
 		  	map.hideZoomSlider();
 		  	search.hide();
+            domUtils.hide(divReadout);
 		}
 
 		function deActivateTool(theTool) {
@@ -1234,6 +1236,7 @@
 		  	toolbar.deactivate(tool);
 		  	map.showZoomSlider();
 		  	search.show();
+            domUtils.show(divReadout);
 		}
 
 		function addToMap(evt) {
