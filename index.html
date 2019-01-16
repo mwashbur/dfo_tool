@@ -1225,6 +1225,7 @@
 		  	map.hideZoomSlider();
 		  	search.hide();
             domUtils.hide(divReadout);
+            toggleGetPointMeasure();
 		}
 
 		function deActivateTool(theTool) {
@@ -1237,6 +1238,7 @@
 		  	map.showZoomSlider();
 		  	search.show();
             domUtils.show(divReadout);
+            toggleGetPointMeasure();
 		}
 
 		function addToMap(evt) {
@@ -3488,6 +3490,11 @@
           var coord1 = gidWithMeasuresGeom.features[0].geometry.paths[0][vertexIndex-1];
           var coord2 = gidWithMeasuresGeom.features[0].geometry.paths[0][vertexIndex];
           var coord3 = gidWithMeasuresGeom.features[0].geometry.paths[0][vertexIndex+1];
+
+          if (coord1==undefined || coord2==undefined || coord3==undefined) {
+            alert("Unable to calculate DFO at this location.");
+            return;
+          };
 
           // array of [x,y,m]; need to loop through this
           var thePoint1 = new Point([coord1[0],coord1[1]], new SpatialReference({wkid: 3857 }));
