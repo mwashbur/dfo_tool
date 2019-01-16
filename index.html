@@ -3398,20 +3398,21 @@
 
         function toggleGetPointMeasure() {
             var btnBackground = document.getElementById("btnMeasureReadout");
-
+            map.infoWindow.hide();
             if (measureClicked) {
                 btnBackground.style.borderColor = "#ccc";
                 btnBackground.style.backgroundColor = "#fff";
                 dom.byId("mapDiv_gc").style.cursor = "auto";
+                map.setInfoWindowOnClick(true);
                 measureClicked = false;
                 map.graphics.clear();
-
 
             }
             else {
                 btnBackground.style.borderColor = "#f00";
                 btnBackground.style.backgroundColor = "#ccc";
                 dom.byId("mapDiv_gc").style.cursor = "crosshair";
+                map.setInfoWindowOnClick(false);
                 measureClicked = true;
 
             }
@@ -3421,8 +3422,6 @@
         function identRouteForM(event) {
             if (measureClicked) {
             map.infoWindow.hide();
-            projectsRI.hide();
-            // hideAllOverlays();
             queryTask = new QueryTask("https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/TxDOT_Roadways/FeatureServer/0");
             queryM = new Query();
             queryM.returnGeometry = true;
