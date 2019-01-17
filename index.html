@@ -1225,7 +1225,9 @@
 		  	map.hideZoomSlider();
 		  	search.hide();
             domUtils.hide(divReadout);
-            toggleGetPointMeasure();
+            if (measureClicked) {
+                toggleGetPointMeasure();
+            }
 		}
 
 		function deActivateTool(theTool) {
@@ -1238,7 +1240,6 @@
 		  	map.showZoomSlider();
 		  	search.show();
             domUtils.show(divReadout);
-            toggleGetPointMeasure();
 		}
 
 		function addToMap(evt) {
